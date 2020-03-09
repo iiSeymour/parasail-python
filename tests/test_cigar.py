@@ -38,6 +38,69 @@ class Tests(TestCase):
         result = parasail.sw_trace("asdf", "asdf", 10, 1, parasail.blosum62)
         print_traceback_attributes(result.traceback)
 
+    def test4(self):
+        """ test simple error free alignment """
+        ref = "ATCGATGTGC"
+        seq = "ATCGATGTGC"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(ref) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "10=")
+
+    def test5(self):
+        """ test simple two base deletion """
+        ref = "ATCGATGTGC"
+        seq = "ATCGATGT"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(seq) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "%s=" % len(seq))
+
+    def test6(self):
+        """ test simple 2 base insertion """
+        ref = "ATCGATGTGC"
+        seq = "ATCGTTATGTGC"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(ref) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "4=2I6=")
+
+    def test7(self):
+        """ test offset start """
+        ref = "ATCGATGTGC"
+        seq =    "GATGTGC"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(ref) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "3D7=")
+
+    def test8(self):
+        """ test offset end """
+        ref = "ATCGATGTGC"
+        seq = "ATCGATG"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(seq) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "7=")
+
+    def test9(self):
+        """ test additional start """
+        ref = "ATCGATGTGC"
+        seq = "TTTTATCGATGTGC"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(ref) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "4S10=")
+
+    def test10(self):
+        """ test additional end """
+        ref = "ATCGATGTGC"
+        seq = "ATCGATGTGCTTTT"
+        result = parasail.sw_trace_striped_16(seq, ref, 8, 4, parasail.dnafull)
+        self.assertEqual((result.cigar.beg_ref, result.end_ref), (0, len(ref) - 1))
+        self.assertEqual((result.cigar.beg_query, result.end_query), (0, len(seq) - 1))
+        self.assertEqual(result.cigar.decode.decode(), "10=4S")
+
 
 if __name__ == '__main__':
     main()
